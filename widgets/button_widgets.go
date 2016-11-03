@@ -44,7 +44,7 @@ func (btn *Button) reshape() {
 	// Recalulate width
 	_, _, btn.width, _ = (*btn.gc).GetStringBounds(btn.text)
 	btn.width += 6
-	
+
 	draw2dkit.Rectangle(btn.shape, btn.x, btn.y, btn.x+btn.width-1, btn.y+btn.height-1)
 	btn.redraw = true
 }

@@ -46,7 +46,6 @@ func NewTextField(gc *draw2d.GraphicContext, window, offscreen *glfw.Window, x, 
 	return textField
 }
 
-
 // reshape recreates tf's path, which is used for drawing it to the screen
 func (tf *TextField) reshape() {
 	draw2dkit.Rectangle(tf.shape, tf.x, tf.y, tf.x+tf.width-1, tf.y+tf.height-1)
@@ -260,12 +259,12 @@ func (tf *TextField) GetEnabled() bool {
 }
 
 type Label struct {
-	x, y, width, height        float64
-	redraw bool
-	shape                      *draw2d.Path
-	window, offscreen          *glfw.Window
-	gc                         *draw2d.GraphicContext // gc may be overwritten so it's a pointer to an interface
-	name, text                 string
+	x, y, width, height float64
+	redraw              bool
+	shape               *draw2d.Path
+	window, offscreen   *glfw.Window
+	gc                  *draw2d.GraphicContext // gc may be overwritten so it's a pointer to an interface
+	name, text          string
 }
 
 func NewLabel(gc *draw2d.GraphicContext, window, offscreen *glfw.Window, x, y float64, text string) *Label {
@@ -289,7 +288,7 @@ func NewLabel(gc *draw2d.GraphicContext, window, offscreen *glfw.Window, x, y fl
 func (lbl *Label) reshape() {
 	_, _, lbl.width, _ = (*lbl.gc).GetStringBounds(lbl.text)
 	lbl.width += 2
-	
+
 	draw2dkit.Rectangle(lbl.shape, lbl.x, lbl.y, lbl.x+lbl.width-1, lbl.y+lbl.height-1)
 	lbl.redraw = true
 }

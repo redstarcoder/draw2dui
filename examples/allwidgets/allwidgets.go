@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"runtime"
 	"time"
-	
+
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/llgcode/draw2d"
@@ -16,13 +16,13 @@ import (
 )
 
 var (
-	fps                 int
-	width, height       int
-	redraw = true
-	font                draw2d.FontData
-	gc                  draw2d.GraphicContext
-	offscreen           *glfw.Window
-	widgetCollection	*draw2dui.WidgetCollection
+	fps              int
+	width, height    int
+	redraw           = true
+	font             draw2d.FontData
+	gc               draw2d.GraphicContext
+	offscreen        *glfw.Window
+	widgetCollection *draw2dui.WidgetCollection
 )
 
 func setGlVars(w, h int) {
@@ -52,7 +52,7 @@ func reshape(window *glfw.Window, w, h int) {
 	gc.SetFontData(draw2d.FontData{
 		Name:   "luxi",
 		Family: draw2d.FontFamilySerif,
-		Style:  draw2d.FontStyleBold/* | draw2d.FontStyleItalic*/})
+		Style:  draw2d.FontStyleBold /* | draw2d.FontStyleItalic*/})
 	gc.SetFontSize(14)
 
 	redraw = true
@@ -106,7 +106,7 @@ func main() {
 		Family: draw2d.FontFamilyMono,
 		Style:  draw2d.FontStyleBold | draw2d.FontStyleItalic})
 	gc.SetFontSize(14)
-	
+
 	// Create widgets and widget collection
 	textField := widgets.NewTextField(&gc, window, offscreen, 50, 50, 420, "Testing123456789", 50)
 	button := widgets.NewButton(&gc, window, offscreen, 50, 50+gc.GetFontSize()+10, "O:")

@@ -37,7 +37,7 @@ func getNewWidgetCollection() (window, offscreen *glfw.Window, wc *WidgetCollect
 	}
 	offscreen.MakeContextCurrent()
 	reshape(width, height)
-	
+
 	window.MakeContextCurrent()
 
 	return window, offscreen, NewWidgetCollection(&gc, window)
@@ -77,7 +77,7 @@ func TestWidgetCollectionDraw(t *testing.T) {
 func TestWidgetCollectionHandle(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = true
-	
+
 	if wc.Handle() {
 		t.Error("Handle shouldn't request a redraw.")
 	}
@@ -89,7 +89,7 @@ func TestWidgetCollectionHandle(t *testing.T) {
 func TestWidgetCollectionKeyPress(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = true
-	
+
 	w, ev := wc.KeyPress(0, 0, 0)
 	if w != nil || ev != EventNone {
 		t.Fail()
@@ -102,7 +102,7 @@ func TestWidgetCollectionKeyPress(t *testing.T) {
 func TestWidgetCollectionCharPress(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = true
-	
+
 	w, ev := wc.CharPress(0)
 	if w != nil || ev != EventNone {
 		t.Fail()
@@ -115,7 +115,7 @@ func TestWidgetCollectionCharPress(t *testing.T) {
 func TestWidgetCollectionMMove(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = true
-	
+
 	w, ev := wc.MMove(0, 0)
 	if w != nil || ev != EventNone || !wc.hasCursor {
 		t.Fail()
@@ -128,12 +128,12 @@ func TestWidgetCollectionMMove(t *testing.T) {
 func TestWidgetCollectionMClick(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = false
-	
+
 	w, ev := wc.MClick(0, glfw.Release, 0)
 	if w != nil || ev != EventNone || wc.forceRedraw {
 		t.Error("Failed Release test.")
 	}
-	
+
 	wc.selected = "test"
 	w, ev = wc.MClick(0, glfw.Press, 0)
 	if w != nil || ev != EventSelected || !wc.forceRedraw || wc.selected != "" {
@@ -147,7 +147,7 @@ func TestWidgetCollectionMClick(t *testing.T) {
 func TestWidgetCollectionReshape(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = false
-	
+
 	wc.Reshape(0, 0)
 	if !wc.forceRedraw {
 		t.Fail()
@@ -160,7 +160,7 @@ func TestWidgetCollectionReshape(t *testing.T) {
 func TestWidgetCollectionRefresh(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = false
-	
+
 	wc.Refresh()
 	if !wc.forceRedraw {
 		t.Fail()

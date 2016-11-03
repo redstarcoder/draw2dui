@@ -4,8 +4,8 @@ package draw2dui
 
 import (
 	"fmt"
-	"sync/atomic"
 	"github.com/go-gl/glfw/v3.1/glfw"
+	"sync/atomic"
 )
 
 var widgetCount int32
