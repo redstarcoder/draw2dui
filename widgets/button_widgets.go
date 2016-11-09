@@ -41,6 +41,7 @@ func NewButton(gc *draw2d.GraphicContext, window, offscreen *glfw.Window, x, y f
 
 // reshape recreates btn's path, which is used for drawing it to the screen
 func (btn *Button) reshape() {
+	btn.shape = &draw2d.Path{}
 	// Recalulate width
 	_, _, btn.width, _ = (*btn.gc).GetStringBounds(btn.text)
 	btn.width += 6

@@ -42,8 +42,7 @@ func (wc *WidgetCollection) Register(widget Widget) {
 	wc.widgets[widget.Name()] = widget
 }
 
-// Draw draws all the widgets to the screen. If force is true, it will force a redraw of all widgets in the
-// collection.
+// Draw draws all the widgets to the screen
 func (wc *WidgetCollection) Draw() {
 	for _, w := range wc.widgets {
 		w.Draw(w.Name() == wc.selected, wc.forceRedraw)
@@ -116,12 +115,16 @@ func (wc *WidgetCollection) MMove(xpos, ypos float64) (widget Widget, event Even
 // if it isn't EventNone.
 func (wc *WidgetCollection) MClick(button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) (Widget, Event) {
 	for _, w := range wc.widgets {
-		if w.MClick(wc.mx, wc.my, button, action, mods) == EventSelected {
+		switch event := w.MClick(wc.mx, wc.my, button, action, mods); event {
+		default:
+			return w, event
+		case EventSelected:
 			if w.Name() != wc.selected {
 				wc.selected = w.Name()
 				wc.forceRedraw = true
 			}
 			return w, EventSelected
+		case EventNone:
 		}
 	}
 	if action == glfw.Press {

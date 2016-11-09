@@ -62,7 +62,7 @@ func fillStringAtWidth(_gc draw2d.GraphicContext, text string, x, y, width float
 }
 
 // fillStringAtWidthCursor draws the text at the specified point (x, y), stopping before width is exceeded.
-func fillStringAtWidthCursor(_gc draw2d.GraphicContext, c *cursor, x, y, width float64) {
+func fillStringAtWidthCursor(_gc draw2d.GraphicContext, c *Cursor, x, y, width float64) {
 	gc := _gc.(*draw2dgl.GraphicContext)
 	var last_i int = 1
 	f, err := loadCurrentFont(gc)
@@ -114,14 +114,57 @@ func fillStringAtWidthCursor(_gc draw2d.GraphicContext, c *cursor, x, y, width f
 }
 
 // TODO calculate iEdge & iOffset using something like MoveToX
-type cursor struct {
-	text              string // text is the text stored in the field
-	i, iOffset, iEdge int    // i is the position of the text cursor
+type Cursor struct {
+	text              string   // text is the text stored in the field
+	textLines         []string // textLines is the text stored in the field, stored as lines
+	i, iOffset, iEdge int      // i is the position of the text cursor
+	iY, maxLines      int      // iY is the y position of i, maxLines is the max visible lines
 	lastBlink         time.Time
 	drawCursor        bool
 }
 
-func (c *cursor) blink() (redraw bool) {
+func (c *Cursor) GenLines(_gc draw2d.GraphicContext, width float64) {
+	gc := _gc.(*draw2dgl.GraphicContext)
+	f, err := loadCurrentFont(gc)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	x := float64(3)
+	ii := 0
+	lastLine := 0
+	prev, hasPrev := truetype.Index(0), false
+	fontName := gc.GetFontName()
+	c.textLines = make([]string, 0, 127)
+	for i, r := range c.text {
+		index := f.Index(r)
+		if hasPrev {
+			x += fUnitsToFloat64(f.Kern(fixed.Int26_6(gc.Current.Scale), prev, index))
+		}
+		glyph := draw2dbase.FetchGlyph(gc, fontName, r)
+		if r == '\n' || x+glyph.Width > width {
+			c.textLines = append(c.textLines, string(c.text[lastLine:lastLine+ii]))
+			ii = 0
+			x = 3
+			if r != '\n' {
+				lastLine = i
+			} else {
+				lastLine = i + 1
+			}
+			prev, hasPrev = truetype.Index(0), false
+		}
+		if r != '\n' {
+			ii++
+			x += glyph.Width
+			prev, hasPrev = index, true
+		}
+	}
+	if ii != 0 {
+		c.textLines = append(c.textLines, string(c.text[lastLine:lastLine+ii]))
+	}
+}
+
+func (c *Cursor) Blink() (redraw bool) {
 	if c.i > c.iEdge {
 		c.iOffset += c.i - c.iEdge
 		c.iEdge = c.i
@@ -135,12 +178,17 @@ func (c *cursor) blink() (redraw bool) {
 	return
 }
 
-func (c *cursor) Insert(s string) {
+func (c *Cursor) Insert(s string) {
 	c.text = strings.Join([]string{c.text[:c.i], s, c.text[c.i:]}, "")
 	c.MoveRight()
 }
 
-func (c *cursor) Backspace() bool {
+// GenLines must be called after
+func (c *Cursor) InsertLine(s string) {
+	c.text = strings.Join(c.textLines, "\n") + "\n" + s
+}
+
+func (c *Cursor) Backspace() bool {
 	if c.i == 0 {
 		return false
 	}
@@ -157,7 +205,7 @@ func (c *cursor) Backspace() bool {
 }
 
 // TODO Make MoveLeft and MoveRight take a parameter
-func (c *cursor) MoveLeft() bool {
+func (c *Cursor) MoveLeft() bool {
 	if c.i > 0 {
 		c.i--
 		if c.i < c.iOffset {
@@ -170,7 +218,7 @@ func (c *cursor) MoveLeft() bool {
 	return false
 }
 
-func (c *cursor) MoveRight() bool {
+func (c *Cursor) MoveRight() bool {
 	if c.i < len(c.text) {
 		c.i++
 		if c.i > c.iEdge {
@@ -183,7 +231,7 @@ func (c *cursor) MoveRight() bool {
 	return false
 }
 
-func (c *cursor) MoveTo(i int) bool {
+func (c *Cursor) MoveTo(i int) bool {
 	if i > c.i {
 		for c.i < i {
 			if !c.MoveRight() {
@@ -202,7 +250,7 @@ func (c *cursor) MoveTo(i int) bool {
 	return false
 }
 
-func (c *cursor) MoveToX(_gc draw2d.GraphicContext, x, mx, width float64) {
+func (c *Cursor) MoveToX(_gc draw2d.GraphicContext, x, mx, width float64) {
 	gc := _gc.(*draw2dgl.GraphicContext)
 	f, err := loadCurrentFont(gc)
 	if err != nil {

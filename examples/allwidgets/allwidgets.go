@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"runtime"
 	"time"
 
@@ -52,10 +53,16 @@ func reshape(window *glfw.Window, w, h int) {
 	gc.SetFontData(draw2d.FontData{
 		Name:   "luxi",
 		Family: draw2d.FontFamilySerif,
-		Style:  draw2d.FontStyleBold /* | draw2d.FontStyleItalic*/})
-	gc.SetFontSize(14)
+		Style:  draw2d.FontStyleNormal /* | draw2d.FontStyleItalic*/})
+	gc.SetFontSize(12)
 
+	// Clear buffer
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	// Ask for redraw
 	redraw = true
+
+	// Have the widget collection handle the resize
 	widgetCollection.Reshape(w, h)
 }
 
@@ -71,17 +78,17 @@ func main() {
 	defer glfw.Terminate()
 	width, height = 800, 800
 
-	err = gl.Init()
-	if err != nil {
-		panic(err)
-	}
-
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	offscreen, err = glfw.CreateWindow(width, height, "", nil, nil)
 	if err != nil {
 		panic(err)
 	}
 	offscreen.MakeContextCurrent()
+
+	err = gl.Init()
+	if err != nil {
+		panic(err)
+	}
 	setGlVars(width, height)
 
 	glfw.WindowHint(glfw.Visible, glfw.True)
@@ -103,15 +110,17 @@ func main() {
 	gc = draw2dgl.NewGraphicContext(width, height)
 	gc.SetFontData(draw2d.FontData{
 		Name:   "luxi",
-		Family: draw2d.FontFamilyMono,
-		Style:  draw2d.FontStyleBold | draw2d.FontStyleItalic})
-	gc.SetFontSize(14)
+		Family: draw2d.FontFamilySerif,
+		Style:  draw2d.FontStyleNormal /* | draw2d.FontStyleItalic*/})
+	gc.SetFontSize(12)
 
 	// Create widgets and widget collection
-	textField := widgets.NewTextField(&gc, window, offscreen, 50, 50, 420, "Testing123456789", 50)
+	textField := widgets.NewTextField(&gc, window, offscreen, 50, 50, 420, "Testing123456789", 75)
 	button := widgets.NewButton(&gc, window, offscreen, 50, 50+gc.GetFontSize()+10, "O:")
+	textBox := widgets.NewTextBox(&gc, window, offscreen, 50, 150, 420, 420, "Testing123456789\nTest2\n\n\n\nA very long line is here, it should automatically wrap because it is too long\n\n\n\n\n\n\n\n\n\n\n\n\n\ntest3\n\n\n\n\n\ntest4")
+	textBox.InsertLine("INSERT LINE TEST")
 	label := widgets.NewLabel(&gc, window, offscreen, 1, 5, "0 fps")
-	widgetCollection = draw2dui.NewWidgetCollection(&gc, window, textField, button, label)
+	widgetCollection = draw2dui.NewWidgetCollection(&gc, window, textField, button, label, textBox)
 
 	reshape(window, width, height)
 	lastUpdate := time.Now()
@@ -120,8 +129,6 @@ func main() {
 	tfps := 0
 
 	drawWait := time.Duration(700/(glfw.GetPrimaryMonitor().GetVideoMode().RefreshRate)*1000) * time.Microsecond
-
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	for !window.ShouldClose() {
 		now := time.Now()
 		if now.Sub(lastUpdate) >= time.Second {
@@ -140,13 +147,33 @@ func main() {
 		}
 		if redraw && now.Sub(lastDraw) >= drawWait-drawDelta {
 			widgetCollection.Draw()
-			gl.Flush() /* Single buffered, so needs a flush. */
+			gl.Flush() /* Flush before buffer swap. */
 
 			drawDelta = time.Since(lastDraw) - drawWait
+
+			/* Swap buffers then copy the front buffer to the back */
 			window.SwapBuffers()
+			lastDraw = time.Now()
+			gl.ReadBuffer(gl.FRONT)
+			gl.DrawBuffer(gl.BACK)
+			gl.RasterPos2i(0, int32(height))
+			gl.CopyPixels(0, 0, int32(width), int32(height), gl.COLOR)
+
+			/* Debugging code. Copy pixels instead of doing pointer swap, useful for confirming if
+			   gl.CopyPixels is working as intended.
+
+			gl.ReadBuffer(gl.BACK)
+			gl.DrawBuffer(gl.FRONT)
+			gl.RasterPos2i(0, int32(height))
+			gl.CopyPixels(0, 0, int32(width), int32(height), gl.COLOR)
+
+			lastDraw = time.Now()
+
+			gl.ReadBuffer(gl.FRONT)
+			gl.DrawBuffer(gl.BACK)*/
+
 			tfps++
 			redraw = false
-			lastDraw = time.Now()
 		} else if !redraw {
 			if fps < 4 {
 				time.Sleep(time.Millisecond * 40)
@@ -178,8 +205,11 @@ func onMMove(w *glfw.Window, xpos, ypos float64) {
 }
 
 func onMClick(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-	_, event := widgetCollection.MClick(button, action, mods)
+	widget, event := widgetCollection.MClick(button, action, mods)
 	if event != draw2dui.EventNone {
+		if event == draw2dui.EventConfirm && widget.Name() == "Button-2" {
+			log.Println("Click!")
+		}
 		redraw = true
 	}
 }
@@ -196,6 +226,7 @@ func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods 
 }
 
 func onRefresh(w *glfw.Window) {
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	redraw = true
 	widgetCollection.Refresh()
 }
