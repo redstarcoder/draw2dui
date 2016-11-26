@@ -65,7 +65,7 @@ func BenchmarkNewWidgetCollection(b *testing.B) {
 func TestWidgetCollectionDraw(t *testing.T) {
 	window, offscreen, wc := getNewWidgetCollection()
 	wc.forceRedraw = true
-	wc.Draw(wc.forceRedraw)
+	wc.Draw()
 	if wc.forceRedraw {
 		t.Fail()
 	}
