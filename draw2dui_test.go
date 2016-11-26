@@ -28,6 +28,10 @@ func getNewWidgetCollection() (window, offscreen *glfw.Window, wc *WidgetCollect
 		panic(err)
 	}
 	window.MakeContextCurrent()
+	err = gl.Init()
+	if err != nil {
+		panic(err)
+	}
 	reshape(width, height)
 
 	//glfw.WindowHint(glfw.Visible, glfw.False)
@@ -208,10 +212,6 @@ func reshape(w, h int) {
 func init() {
 	runtime.LockOSThread()
 	err := glfw.Init()
-	if err != nil {
-		panic(err)
-	}
-	err = gl.Init()
 	if err != nil {
 		panic(err)
 	}
